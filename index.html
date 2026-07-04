@@ -37,7 +37,7 @@ h1 { margin: 0; font-size: 20px; }
 .small { font-size: 12px; color: var(--muted); }
 
 .container {
-  max-width: 800px;
+  max-width: 780px;
   margin: auto;
   padding: 18px;
 }
@@ -49,28 +49,48 @@ button {
   padding: 12px;
   font-weight: 600;
   cursor: pointer;
+  transition: 0.2s ease;
 }
 
-.start { background: var(--accent); width: 100%; margin-bottom: 12px; }
+button:active {
+  transform: scale(0.96);
+}
 
-.pass { background: var(--good); color: white; flex: 1; }
-.fail { background: var(--bad); color: white; flex: 1; }
-.next { background: var(--blue); color: white; flex: 1; }
-
-/* PROGRESS */
-.bar {
+.start {
+  background: var(--accent);
   width: 100%;
-  height: 10px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-.fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--accent), #ffd84d);
+.pass, .fail {
+  flex: 1;
+  opacity: 0.9;
+}
+
+.pass { background: var(--good); color: white; }
+.fail { background: var(--bad); color: white; }
+
+.next {
+  background: var(--blue);
+  color: white;
+  width: 100%;
+  margin-top: 10px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ACTIVE BUTTON STATE */
+.selected {
+  outline: 3px solid #ffffff33;
+  transform: scale(1.03);
+  opacity: 1 !important;
+}
+
+/* TIMER */
+.timer {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: var(--accent);
 }
 
 /* CARD */
@@ -79,19 +99,18 @@ button {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px;
-  backdrop-filter: blur(12px);
 }
 
 .category {
-  color: var(--accent);
   font-size: 12px;
+  color: var(--accent);
   margin-bottom: 10px;
   text-transform: uppercase;
 }
 
 .question {
   font-size: 18px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .btn-row {
@@ -102,20 +121,6 @@ button {
 #answer {
   margin-top: 12px;
   color: var(--muted);
-}
-
-/* GRAPH */
-.graph-box {
-  margin-top: 25px;
-  padding: 15px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 12px;
-  border: 1px solid var(--border);
-}
-
-canvas {
-  width: 100%;
-  height: 260px;
 }
 
 /* MOBILE */
@@ -129,34 +134,31 @@ canvas {
 
 <header>
   <h1>🎓 ეროვნული გამოცდების ტრენერი</h1>
-  <div class="small">Analytics Mode Enabled</div>
+  <div class="small">Timed Exam Mode • Locked Answers</div>
 </header>
 
 <div class="container">
 
 <button class="start" onclick="startExam()">გამოცდის დაწყება</button>
 
-<div class="bar"><div class="fill" id="fill"></div></div>
-
 <div class="card" id="card" style="display:none;">
+
+  <div class="timer" id="timer">⏱ 60</div>
+
   <div class="category" id="cat"></div>
   <div class="question" id="q"></div>
 
   <div class="btn-row">
-    <button class="pass" onclick="mark(true)">ვიცოდი</button>
-    <button class="fail" onclick="mark(false)">არ ვიცოდი</button>
-    <button class="next" onclick="next()">შემდეგი</button>
+    <button class="pass" id="yesBtn" onclick="selectAnswer(true)">ვიცოდი</button>
+    <button class="fail" id="noBtn" onclick="selectAnswer(false)">არ ვიცოდი</button>
   </div>
+
+  <button class="next" id="nextBtn" onclick="next()">შემდეგი</button>
 
   <div id="answer"></div>
 </div>
 
 <div class="result" id="result"></div>
-
-<div class="graph-box" id="graphBox" style="display:none;">
-  <h3>📊 შედეგების ანალიტიკა</h3>
-  <canvas id="graph"></canvas>
-</div>
 
 </div>
 
@@ -174,7 +176,11 @@ let stats = {};
 let exam = [];
 let index = 0;
 let score = 0;
+
+let selected = null;
 let answered = false;
+let time = 60;
+let timerInterval;
 
 /* PICK */
 function pickQuestion(){
@@ -197,7 +203,6 @@ function startExam(){
 
   document.getElementById("card").style.display = "block";
   document.getElementById("result").innerHTML = "";
-  document.getElementById("graphBox").style.display = "none";
 
   show();
 }
@@ -205,93 +210,109 @@ function startExam(){
 /* SHOW */
 function show(){
   let q = exam[index];
+
+  selected = null;
   answered = false;
+  time = 60;
+
+  document.getElementById("answer").innerHTML = "";
+  document.getElementById("nextBtn").style.opacity = 0.5;
+  document.getElementById("nextBtn").style.pointerEvents = "none";
 
   document.getElementById("cat").innerText = q.cat;
   document.getElementById("q").innerText = q.q;
-  document.getElementById("answer").innerText = "";
 
-  updateBar();
+  resetButtons();
+  startTimer();
 }
 
-/* MARK */
-function mark(known){
+/* TIMER */
+function startTimer(){
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(()=>{
+    time--;
+    document.getElementById("timer").innerText = "⏱ " + time;
+
+    if (time <= 0) {
+      clearInterval(timerInterval);
+      lockAnswer(null); // timeout = wrong
+    }
+  }, 1000);
+}
+
+/* SELECT */
+function selectAnswer(val){
   if (answered) return;
+
+  selected = val;
+
+  document.getElementById("yesBtn").classList.remove("selected");
+  document.getElementById("noBtn").classList.remove("selected");
+
+  if (val === true) {
+    document.getElementById("yesBtn").classList.add("selected");
+  } else {
+    document.getElementById("noBtn").classList.add("selected");
+  }
+
+  document.getElementById("nextBtn").style.opacity = 1;
+  document.getElementById("nextBtn").style.pointerEvents = "auto";
+}
+
+/* LOCK */
+function lockAnswer(forceVal){
+  if (answered) return;
+
   answered = true;
+  clearInterval(timerInterval);
 
   let q = exam[index];
 
   if (!stats[q.cat]) stats[q.cat] = {ok:0,bad:0};
 
-  if (known) {
+  let val = selected;
+
+  if (forceVal === null) val = false;
+
+  if (val === true) {
     stats[q.cat].ok++;
     score++;
   } else {
     stats[q.cat].bad++;
   }
 
-  document.getElementById("answer").innerText = "📌 " + q.ans;
+  document.getElementById("answer").innerHTML =
+    "📌 " + q.ans;
+
+  document.getElementById("nextBtn").style.opacity = 1;
+  document.getElementById("nextBtn").style.pointerEvents = "auto";
 }
 
 /* NEXT */
 function next(){
+  if (!answered) return;
+
   index++;
   if (index >= exam.length) return finish();
+
   show();
+}
+
+/* RESET BUTTONS */
+function resetButtons(){
+  document.getElementById("yesBtn").classList.remove("selected");
+  document.getElementById("noBtn").classList.remove("selected");
 }
 
 /* FINISH */
 function finish(){
+  clearInterval(timerInterval);
+
   document.getElementById("card").style.display = "none";
 
   document.getElementById("result").innerHTML =
     "🎯 ქულა: " + score + "/20";
-
-  drawGraph();
-}
-
-/* BAR */
-function updateBar(){
-  let p = (index/exam.length)*100;
-  document.getElementById("fill").style.width = p + "%";
-}
-
-/* ================= GRAPH ================= */
-function drawGraph(){
-  document.getElementById("graphBox").style.display = "block";
-
-  const canvas = document.getElementById("graph");
-  const ctx = canvas.getContext("2d");
-
-  canvas.width = canvas.offsetWidth;
-  canvas.height = 260;
-
-  const categories = Object.keys(stats);
-  const barWidth = canvas.width / (categories.length * 2);
-
-  let max = 1;
-  categories.forEach(c=>{
-    max = Math.max(max, stats[c].ok + stats[c].bad);
-  });
-
-  categories.forEach((cat, i)=>{
-    let x = i * barWidth * 2 + 20;
-
-    let okH = (stats[cat].ok / max) * 200;
-    let badH = (stats[cat].bad / max) * 200;
-
-    // correct
-    ctx.fillStyle = "#2ecc71";
-    ctx.fillRect(x, 220 - okH, barWidth, okH);
-
-    // wrong
-    ctx.fillStyle = "#e74c3c";
-    ctx.fillRect(x + barWidth, 220 - badH, barWidth, badH);
-
-    ctx.fillStyle = "#fff";
-    ctx.font = "10px Arial";
-    ctx.fillText(cat, x, 240);
-  });
 }
 
 </script>
