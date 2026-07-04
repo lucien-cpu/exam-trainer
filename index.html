@@ -80,6 +80,34 @@ button {
   text-align: center;
   font-size: 18px;
 }
+
+/* ================= MOBILE ================= */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  .card {
+    padding: 15px;
+  }
+
+  .question {
+    font-size: 16px;
+  }
+
+  button {
+    width: 100%;
+    margin: 6px 0;
+  }
+
+  header h1 {
+    font-size: 16px;
+  }
+}
+
+button:active {
+  transform: scale(0.98);
+}
 </style>
 </head>
 
@@ -115,223 +143,25 @@ button {
 
 /* ================= QUESTION BANK ================= */
 const data = [
-
-/* ================= PROGRESSION ================= */
 {cat:"პროგრესია", q:"იპოვე n-ე წევრი.", ans:"aₙ = a₁ + (n−1)d"},
-{cat:"პროგრესია", q:"არითმეტიკული ჯამი.", ans:"Sₙ = n/2 (a₁ + aₙ)"},
-{cat:"პროგრესია", q:"გეომეტრიული n-ე წევრი.", ans:"aₙ = a₁·r^(n−1)"},
-{cat:"პროგრესია", q:"გეომეტრიული ჯამი.", ans:"Sₙ = a₁(1−rⁿ)/(1−r)"},
-
-/* ================= QUADRATIC (IMPORTANT CASES) ================= */
-{
-cat:"ალგებრა",
-q:"ამოხსენი კვადრატული განტოლება (a = 1).",
-ans:"x² + bx + c = 0 ⇒ x = (-b ± √(b² - 4c)) / 2"
-},
-{
-cat:"ალგებრა",
-q:"ამოხსენი კვადრატული განტოლება (a ≠ 1).",
-ans:"ax² + bx + c = 0 ⇒ x = (-b ± √(b² - 4ac)) / (2a)"
-},
-{
-cat:"ალგებრა",
-q:"ვიეტის თეორემა.",
-ans:"x₁ + x₂ = -b/a, x₁x₂ = c/a"
-},
-{
-cat:"ალგებრა",
-q:"სხვაობის კვადრატი.",
-ans:"a² - b² = (a-b)(a+b)"
-},
-{
-cat:"ალგებრა",
-q:"სრული კვადრატი.",
-ans:"(a ± b)² = a² ± 2ab + b²"
-},
-
-/* ================= GEOMETRY ================= */
-{
-cat:"გეომეტრია",
-q:"მანძილი ორ წერტილს შორის.",
-ans:"d = √((x₂-x₁)² + (y₂-y₁)²)"
-},
-{
-cat:"გეომეტრია",
-q:"შუა წერტილი.",
-ans:"M = ((x₁+x₂)/2, (y₁+y₂)/2)"
-},
-{
-cat:"გეომეტრია",
-q:"სწორის დახრილობა.",
-ans:"k = (y₂-y₁)/(x₂-x₁)"
-},
-{
-cat:"გეომეტრია",
-q:"სწორის განტოლება.",
-ans:"y = kx + b"
-},
-{
-cat:"გეომეტრია",
-q:"წრის განტოლება.",
-ans:"(x-a)² + (y-b)² = r²"
-},
-{
-cat:"გეომეტრია",
-q:"წრის ფართობი.",
-ans:"S = πr²"
-},
-{
-cat:"გეომეტრია",
-q:"წრის სიგრძე.",
-ans:"C = 2πr"
-},
-{
-cat:"გეომეტრია",
-q:"სამკუთხედის ფართობი.",
-ans:"S = 1/2 ab sinC"
-},
-{
-cat:"გეომეტრია",
-q:"პითაგორას თეორემა.",
-ans:"a² + b² = c²"
-},
-{
-cat:"გეომეტრია",
-q:"კოსინუსების თეორემა.",
-ans:"c² = a² + b² − 2ab cosC"
-},
-{
-cat:"გეომეტრია",
-q:"მსგავსი სამკუთხედები.",
-ans:"a₁/a₂ = b₁/b₂ = c₁/c₂"
-},
-{
-cat:"გეომეტრია",
-q:"ტრაპეციის ფართობი.",
-ans:"S = (a+b)/2 · h"
-},
-
-/* ================= TRIGONOMETRY ================= */
-{
-cat:"ტრიგონომეტრია",
-q:"ძირითადი იდენტობა.",
-ans:"sin²x + cos²x = 1"
-},
-{
-cat:"ტრიგონომეტრია",
-q:"ტანგენსი.",
-ans:"tan x = sin x / cos x"
-},
-{
-cat:"ტრიგონომეტრია",
-q:"სინუსების თეორემა.",
-ans:"a/sinA = b/sinB = c/sinC"
-},
-{
-cat:"ტრიგონომეტრია",
-q:"ორმაგი კუთხე (sin).",
-ans:"sin2x = 2sinxcosx"
-},
-{
-cat:"ტრიგონომეტრია",
-q:"ორმაგი კუთხე (cos).",
-ans:"cos2x = cos²x - sin²x"
-},
-
-/* ================= PROBABILITY ================= */
-{
-cat:"ალბათობა",
-q:"ძირითადი ალბათობა.",
-ans:"P(A) = n(A)/n(Ω)"
-},
-{
-cat:"ალბათობა",
-q:"დამოუკიდებელი მოვლენები.",
-ans:"P(A∩B) = P(A)·P(B)"
-},
-
-/* ================= COMBINATORICS ================= */
-{
-cat:"კომბინატორიკა",
-q:"კომბინაციები.",
-ans:"C(n,k) = n!/(k!(n-k)!)"
-},
-{
-cat:"კომბინატორიკა",
-q:"პერმუტაცია.",
-ans:"P(n) = n!"
-},
-{
-cat:"კომბინატორიკა",
-q:"განლაგება.",
-ans:"A(n,k) = n!/(n-k)!"
-},
-
-/* ================= FUNCTIONS ================= */
-{
-cat:"ფუნქციები",
-q:"წრფივი ფუნქცია.",
-ans:"y = kx + b"
-},
-{
-cat:"ფუნქციები",
-q:"კვადრატული ფუნქცია.",
-ans:"y = ax² + bx + c"
-},
-{
-cat:"ფუნქციები",
-q:"პარაბოლის წვერო.",
-ans:"x = -b/(2a)"
-},
-
-/* ================= EXPONENTIAL ================= */
-{
-cat:"ექსპონენციები",
-q:"ექსპონენციალური მოდელი.",
-ans:"A = A₀·a^t"
-},
-
-/* ================= LOGARITHMS ================= */
-{
-cat:"ლოგარითმები",
-q:"ლოგარითმის განმარტება.",
-ans:"log_a(x) = y ⇔ a^y = x"
-},
-{
-cat:"ლოგარითმები",
-q:"ლოგის თვისებები.",
-ans:"log(ab)=log a + log b"
-},
-{
-cat:"ლოგარითმები",
-q:"ლოგის გაყოფა.",
-ans:"log(a/b)=log a - log b"
-},
-
-/* ================= COORDINATE GEOMETRY ================= */
-{
-cat:"გეომეტრია",
-q:"სწორის განტოლება.",
-ans:"y = kx + b"
-},
-{
-cat:"გეომეტრია",
-q:"დახრილობა.",
-ans:"k = (y₂-y₁)/(x₂-x₁)"
-},
-{
-cat:"გეომეტრია",
-q:"წრის ცენტრი და რადიუსი.",
-ans:"(x-a)² + (y-b)² = r²"
-}
+{cat:"პროგრესია", q:"ჯამი.", ans:"Sₙ = n/2(a₁ + aₙ)"},
+{cat:"ალგებრა", q:"კვადრატული განტოლება.", ans:"x = (-b ± √(b²-4ac)) / (2a)"},
+{cat:"ალგებრა", q:"a = 1 შემთხვევა.", ans:"x = (-b ± √(b² - 4c))/2"},
+{cat:"გეომეტრია", q:"მანძილი ორ წერტილს შორის.", ans:"√((x₂-x₁)²+(y₂-y₁)²)"},
+{cat:"გეომეტრია", q:"წრის ფართობი.", ans:"πr²"},
+{cat:"ტრიგონომეტრია", q:"sin²x + cos²x.", ans:"sin²x + cos²x = 1"},
+{cat:"ალბათობა", q:"P(A).", ans:"n(A)/n(Ω)"},
+{cat:"კომბინატორიკა", q:"C(n,k).", ans:"n!/(k!(n-k)!)"},
+{cat:"ფუნქციები", q:"y = kx + b.", ans:"y = kx + b"},
+{cat:"ლოგარითმები", q:"log definition.", ans:"log_a(x)=y ⇔ a^y=x"}
 ];
 
-
-/* ================= WEAKNESS ENGINE ================= */
+/* ================= ENGINE ================= */
 let stats = {};
 let exam = [];
 let index = 0;
 let score = 0;
+let answered = false; // 🔒 anti double-click fix
 
 function pickQuestion() {
   let weighted = [];
@@ -344,7 +174,7 @@ function pickQuestion() {
   return weighted[Math.floor(Math.random() * weighted.length)];
 }
 
-/* ================= EXAM FLOW ================= */
+/* ================= FLOW ================= */
 function startExam(){
   exam = [];
   index = 0;
@@ -363,6 +193,8 @@ function startExam(){
 function show(){
   let q = exam[index];
 
+  answered = false; // reset lock per question
+
   document.getElementById("cat").innerText = q.cat;
   document.getElementById("q").innerText = q.q;
   document.getElementById("answer").innerText = "";
@@ -371,6 +203,10 @@ function show(){
 }
 
 function mark(known){
+
+  if (answered) return; // 🔒 prevents spam clicks
+  answered = true;
+
   let q = exam[index];
 
   if (!stats[q.cat]) stats[q.cat] = {ok:0,bad:0};
