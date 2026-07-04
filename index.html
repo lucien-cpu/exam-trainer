@@ -1,167 +1,3 @@
-<!DOCTYPE html>
-<html lang="ka">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>National Exam Trainer</title>
-
-<style>
-:root {
-  --bg: #0b0c10;
-  --card: rgba(21, 24, 35, 0.85);
-  --border: rgba(255,255,255,0.08);
-  --text: #e6e6e6;
-  --muted: #a0a0a0;
-  --accent: #ffcc00;
-  --good: #2ecc71;
-  --bad: #e74c3c;
-  --blue: #3498db;
-}
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: system-ui, Arial;
-  background: radial-gradient(circle at top, #141622, var(--bg));
-  color: var(--text);
-}
-
-header {
-  text-align: center;
-  padding: 18px;
-  border-bottom: 1px solid var(--border);
-}
-
-h1 { margin: 0; font-size: 20px; }
-.small { font-size: 12px; color: var(--muted); }
-
-.container {
-  max-width: 780px;
-  margin: auto;
-  padding: 18px;
-}
-
-/* BUTTONS */
-button {
-  border: none;
-  border-radius: 10px;
-  padding: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-button:active {
-  transform: scale(0.96);
-}
-
-.start {
-  background: var(--accent);
-  width: 100%;
-  margin-bottom: 12px;
-}
-
-.pass, .fail {
-  flex: 1;
-  opacity: 0.9;
-}
-
-.pass { background: var(--good); color: white; }
-.fail { background: var(--bad); color: white; }
-
-.next {
-  background: var(--blue);
-  color: white;
-  width: 100%;
-  margin-top: 10px;
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-/* ACTIVE BUTTON STATE */
-.selected {
-  outline: 3px solid #ffffff33;
-  transform: scale(1.03);
-  opacity: 1 !important;
-}
-
-/* TIMER */
-.timer {
-  font-size: 14px;
-  margin-bottom: 10px;
-  color: var(--accent);
-}
-
-/* CARD */
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-}
-
-.category {
-  font-size: 12px;
-  color: var(--accent);
-  margin-bottom: 10px;
-  text-transform: uppercase;
-}
-
-.question {
-  font-size: 18px;
-  margin-bottom: 12px;
-}
-
-.btn-row {
-  display: flex;
-  gap: 10px;
-}
-
-#answer {
-  margin-top: 12px;
-  color: var(--muted);
-}
-
-/* MOBILE */
-@media (max-width: 600px) {
-  .btn-row { flex-direction: column; }
-}
-</style>
-</head>
-
-<body>
-
-<header>
-  <h1>🎓 ეროვნული გამოცდების ტრენერი</h1>
-  <div class="small">Timed Exam Mode • Locked Answers</div>
-</header>
-
-<div class="container">
-
-<button class="start" onclick="startExam()">გამოცდის დაწყება</button>
-
-<div class="card" id="card" style="display:none;">
-
-  <div class="timer" id="timer">⏱ 60</div>
-
-  <div class="category" id="cat"></div>
-  <div class="question" id="q"></div>
-
-  <div class="btn-row">
-    <button class="pass" id="yesBtn" onclick="selectAnswer(true)">ვიცოდი</button>
-    <button class="fail" id="noBtn" onclick="selectAnswer(false)">არ ვიცოდი</button>
-  </div>
-
-  <button class="next" id="nextBtn" onclick="next()">შემდეგი</button>
-
-  <div id="answer"></div>
-</div>
-
-<div class="result" id="result"></div>
-
-</div>
-
 <script>
 
 const data = [
@@ -178,7 +14,7 @@ let index = 0;
 let score = 0;
 
 let selected = null;
-let answered = false;
+let locked = false;
 let time = 60;
 let timerInterval;
 
@@ -193,7 +29,7 @@ function pickQuestion(){
 }
 
 /* START */
-function startExam(){
+window.startExam = function(){
   exam = [];
   index = 0;
   score = 0;
@@ -205,17 +41,18 @@ function startExam(){
   document.getElementById("result").innerHTML = "";
 
   show();
-}
+};
 
-/* SHOW */
+/* SHOW QUESTION */
 function show(){
   let q = exam[index];
 
   selected = null;
-  answered = false;
+  locked = false;
   time = 60;
 
   document.getElementById("answer").innerHTML = "";
+
   document.getElementById("nextBtn").style.opacity = 0.5;
   document.getElementById("nextBtn").style.pointerEvents = "none";
 
@@ -236,46 +73,45 @@ function startTimer(){
 
     if (time <= 0) {
       clearInterval(timerInterval);
-      lockAnswer(null); // timeout = wrong
+      lockAnswer(false); // auto-fail
     }
   }, 1000);
 }
 
-/* SELECT */
-function selectAnswer(val){
-  if (answered) return;
+/* SELECT ANSWER */
+window.selectAnswer = function(val){
+  if (locked) return;
 
   selected = val;
 
   document.getElementById("yesBtn").classList.remove("selected");
   document.getElementById("noBtn").classList.remove("selected");
 
-  if (val === true) {
-    document.getElementById("yesBtn").classList.add("selected");
-  } else {
-    document.getElementById("noBtn").classList.add("selected");
-  }
+  if (val) document.getElementById("yesBtn").classList.add("selected");
+  else document.getElementById("noBtn").classList.add("selected");
 
   document.getElementById("nextBtn").style.opacity = 1;
   document.getElementById("nextBtn").style.pointerEvents = "auto";
-}
+};
 
-/* LOCK */
+/* LOCK ANSWER */
 function lockAnswer(forceVal){
-  if (answered) return;
+  if (locked) return;
 
-  answered = true;
+  locked = true;
   clearInterval(timerInterval);
 
   let q = exam[index];
 
   if (!stats[q.cat]) stats[q.cat] = {ok:0,bad:0};
 
-  let val = selected;
+  let finalAnswer = selected;
 
-  if (forceVal === null) val = false;
+  if (forceVal !== undefined) {
+    finalAnswer = forceVal;
+  }
 
-  if (val === true) {
+  if (finalAnswer === true) {
     stats[q.cat].ok++;
     score++;
   } else {
@@ -289,17 +125,26 @@ function lockAnswer(forceVal){
   document.getElementById("nextBtn").style.pointerEvents = "auto";
 }
 
-/* NEXT */
-function next(){
-  if (!answered) return;
+/* NEXT QUESTION (FIXED) */
+window.next = function(){
+
+  // 🔥 IMPORTANT FIX:
+  // allow proceeding if locked OR time ended
+  if (!locked) {
+    lockAnswer(selected ?? false);
+  }
 
   index++;
-  if (index >= exam.length) return finish();
+
+  if (index >= exam.length) {
+    finish();
+    return;
+  }
 
   show();
-}
+};
 
-/* RESET BUTTONS */
+/* RESET UI */
 function resetButtons(){
   document.getElementById("yesBtn").classList.remove("selected");
   document.getElementById("noBtn").classList.remove("selected");
@@ -316,6 +161,3 @@ function finish(){
 }
 
 </script>
-
-</body>
-</html>
