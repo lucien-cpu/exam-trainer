@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>National Exam Trainer</title>
+
+<style>
+:root {
+  --bg: #0b0c10;
+  --card: rgba(21, 24, 35, 0.85);
+  --border: rgba(255,255,255,0.08);
+  --text: #e6e6e6;
+  --muted: #a0a0a0;
+  --accent: #ffcc00;
+  --good: #2ecc71;
+  --bad: #e74c3c;
+  --blue: #3498db;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background: radial-gradient(circle at top, #141622, var(--bg));
+  color: var(--text);
+}
+
+/* HEADER */
+header {
+  text-align: center;
+  padding: 18px;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.3px;
+}
+
+.small {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* LAYOUT */
+.container {
+  max-width: 760px;
+  margin: auto;
+  padding: 18px;
+}
+
+/* BUTTON */
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* START BUTTON */
+.start {
+  background: var(--accent);
+  width: 100%;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+/* PROGRESS */
+.bar {
+  width: 100%;
+  height: 10px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), #ffd84d);
+  transition: width 0.3s ease;
+}
+
+/* CARD */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+/* CATEGORY */
+.category {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+/* QUESTION */
+.question {
+  font-size: 18px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+/* BUTTON ROW */
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pass {
+  flex: 1;
+  background: var(--good);
+  color: white;
+}
+
+.fail {
+  flex: 1;
+  background: var(--bad);
+  color: white;
+}
+
+.next {
+  flex: 1;
+  background: var(--blue);
+  color: white;
+}
+
+/* ANSWER */
+#answer {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* RESULT */
+.result {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 16px;
+  color: var(--text);
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .question {
+    font-size: 16px;
+  }
+
+  button {
+    font-size: 14px;
+  }
+
+  .btn-row {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🎓 ეროვნული გამოცდების ტრენერი</h1>
+  <div class="small">AI Weakness Engine • Exam Mode</div>
+</header>
+
+<div class="container">
+
+<button class="start" onclick="startExam()">გამოცდის დაწყება</button>
+
+<div class="bar"><div class="fill" id="fill"></div></div>
+
+<div class="card" id="card" style="display:none;">
+  <div class="category" id="cat"></div>
+  <div class="question" id="q"></div>
+
+  <div class="btn-row">
+    <button class="pass" onclick="mark(true)">ვიცოდი</button>
+    <button class="fail" onclick="mark(false)">არ ვიცოდი</button>
+    <button class="next" onclick="next()">შემდეგი</button>
+  </div>
+
+  <div id="answer"></div>
+</div>
+
+<div class="result" id="result"></div>
+
+</div>
+
+<script>
+
+/* ================= QUESTION BANK ================= */
+const data = [
+const data = [
+
+/* ================= PROGRESSION ================= */
+{cat:"პროგრესია", q:"იპოვე n-ე წევრი.", ans:"aₙ = a₁ + (n−1)d"},
+{cat:"პროგრესია", q:"არითმეტიკული ჯამი.", ans:"Sₙ = n/2 (a₁ + aₙ)"},
+{cat:"პროგრესია", q:"გეომეტრიული n-ე წევრი.", ans:"aₙ = a₁·r^(n−1)"},
+{cat:"პროგრესია", q:"გეომეტრიული ჯამი.", ans:"Sₙ = a₁(1−rⁿ)/(1−r)"},
+
+/* ================= QUADRATIC (IMPORTANT CASES) ================= */
+{
+cat:"ალგებრა",
+q:"ამოხსენი კვადრატული განტოლება (a = 1).",
+ans:"x² + bx + c = 0 ⇒ x = (-b ± √(b² - 4c)) / 2"
+},
+{
+cat:"ალგებრა",
+q:"ამოხსენი კვადრატული განტოლება (a ≠ 1).",
+ans:"ax² + bx + c = 0 ⇒ x = (-b ± √(b² - 4ac)) / (2a)"
+},
+{
+cat:"ალგებრა",
+q:"ვიეტის თეორემა.",
+ans:"x₁ + x₂ = -b/a, x₁x₂ = c/a"
+},
+{
+cat:"ალგებრა",
+q:"სხვაობის კვადრატი.",
+ans:"a² - b² = (a-b)(a+b)"
+},
+{
+cat:"ალგებრა",
+q:"სრული კვადრატი.",
+ans:"(a ± b)² = a² ± 2ab + b²"
+},
+
+/* ================= GEOMETRY ================= */
+{
+cat:"გეომეტრია",
+q:"მანძილი ორ წერტილს შორის.",
+ans:"d = √((x₂-x₁)² + (y₂-y₁)²)"
+},
+{
+cat:"გეომეტრია",
+q:"შუა წერტილი.",
+ans:"M = ((x₁+x₂)/2, (y₁+y₂)/2)"
+},
+{
+cat:"გეომეტრია",
+q:"სწორის დახრილობა.",
+ans:"k = (y₂-y₁)/(x₂-x₁)"
+},
+{
+cat:"გეომეტრია",
+q:"სწორის განტოლება.",
+ans:"y = kx + b"
+},
+{
+cat:"გეომეტრია",
+q:"წრის განტოლება.",
+ans:"(x-a)² + (y-b)² = r²"
+},
+{
+cat:"გეომეტრია",
+q:"წრის ფართობი.",
+ans:"S = πr²"
+},
+{
+cat:"გეომეტრია",
+q:"წრის სიგრძე.",
+ans:"C = 2πr"
+},
+{
+cat:"გეომეტრია",
+q:"სამკუთხედის ფართობი.",
+ans:"S = 1/2 ab sinC"
+},
+{
+cat:"გეომეტრია",
+q:"პითაგორას თეორემა.",
+ans:"a² + b² = c²"
+},
+{
+cat:"გეომეტრია",
+q:"კოსინუსების თეორემა.",
+ans:"c² = a² + b² − 2ab cosC"
+},
+{
+cat:"გეომეტრია",
+q:"მსგავსი სამკუთხედები.",
+ans:"a₁/a₂ = b₁/b₂ = c₁/c₂"
+},
+{
+cat:"გეომეტრია",
+q:"ტრაპეციის ფართობი.",
+ans:"S = (a+b)/2 · h"
+},
+
+/* ================= TRIGONOMETRY ================= */
+{
+cat:"ტრიგონომეტრია",
+q:"ძირითადი იდენტობა.",
+ans:"sin²x + cos²x = 1"
+},
+{
+cat:"ტრიგონომეტრია",
+q:"ტანგენსი.",
+ans:"tan x = sin x / cos x"
+},
+{
+cat:"ტრიგონომეტრია",
+q:"სინუსების თეორემა.",
+ans:"a/sinA = b/sinB = c/sinC"
+},
+{
+cat:"ტრიგონომეტრია",
+q:"ორმაგი კუთხე (sin).",
+ans:"sin2x = 2sinxcosx"
+},
+{
+cat:"ტრიგონომეტრია",
+q:"ორმაგი კუთხე (cos).",
+ans:"cos2x = cos²x - sin²x"
+},
+
+/* ================= PROBABILITY ================= */
+{
+cat:"ალბათობა",
+q:"ძირითადი ალბათობა.",
+ans:"P(A) = n(A)/n(Ω)"
+},
+{
+cat:"ალბათობა",
+q:"დამოუკიდებელი მოვლენები.",
+ans:"P(A∩B) = P(A)·P(B)"
+},
+
+/* ================= COMBINATORICS ================= */
+{
+cat:"კომბინატორიკა",
+q:"კომბინაციები.",
+ans:"C(n,k) = n!/(k!(n-k)!)"
+},
+{
+cat:"კომბინატორიკა",
+q:"პერმუტაცია.",
+ans:"P(n) = n!"
+},
+{
+cat:"კომბინატორიკა",
+q:"განლაგება.",
+ans:"A(n,k) = n!/(n-k)!"
+},
+
+/* ================= FUNCTIONS ================= */
+{
+cat:"ფუნქციები",
+q:"წრფივი ფუნქცია.",
+ans:"y = kx + b"
+},
+{
+cat:"ფუნქციები",
+q:"კვადრატული ფუნქცია.",
+ans:"y = ax² + bx + c"
+},
+{
+cat:"ფუნქციები",
+q:"პარაბოლის წვერო.",
+ans:"x = -b/(2a)"
+},
+
+/* ================= EXPONENTIAL ================= */
+{
+cat:"ექსპონენციები",
+q:"ექსპონენციალური მოდელი.",
+ans:"A = A₀·a^t"
+},
+
+/* ================= LOGARITHMS ================= */
+{
+cat:"ლოგარითმები",
+q:"ლოგარითმის განმარტება.",
+ans:"log_a(x) = y ⇔ a^y = x"
+},
+{
+cat:"ლოგარითმები",
+q:"ლოგის თვისებები.",
+ans:"log(ab)=log a + log b"
+},
+{
+cat:"ლოგარითმები",
+q:"ლოგის გაყოფა.",
+ans:"log(a/b)=log a - log b"
+},
+
+/* ================= COORDINATE GEOMETRY ================= */
+{
+cat:"გეომეტრია",
+q:"სწორის განტოლება.",
+ans:"y = kx + b"
+},
+{
+cat:"გეომეტრია",
+q:"დახრილობა.",
+ans:"k = (y₂-y₁)/(x₂-x₁)"
+},
+{
+cat:"გეომეტრია",
+q:"წრის ცენტრი და რადიუსი.",
+ans:"(x-a)² + (y-b)² = r²"
+}
+];
+
+
+/* ================= ENGINE ================= */
+let stats = {};
+let exam = [];
+let index = 0;
+let score = 0;
+let answered = false;
+
+/* ================= PICK ================= */
+function pickQuestion() {
+  let pool = [];
+
+  for (let q of data) {
+    let w = stats[q.cat] ? 1 : 3;
+    for (let i = 0; i < w; i++) pool.push(q);
+  }
+
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/* ================= START ================= */
+function startExam(){
+  exam = [];
+  index = 0;
+  score = 0;
+  stats = {};
+
+  for (let i = 0; i < 20; i++) {
+    exam.push(pickQuestion());
+  }
+
+  document.getElementById("card").style.display = "block";
+  document.getElementById("result").innerHTML = "";
+  show();
+}
+
+/* ================= SHOW ================= */
+function show(){
+  let q = exam[index];
+
+  answered = false;
+
+  document.getElementById("cat").innerText = q.cat;
+  document.getElementById("q").innerText = q.q;
+  document.getElementById("answer").innerHTML = "";
+
+  updateBar();
+}
+
+/* ================= MARK ================= */
+function mark(known){
+
+  if (answered) return;
+  answered = true;
+
+  let q = exam[index];
+
+  if (!stats[q.cat]) stats[q.cat] = {ok:0,bad:0};
+
+  if (known) {
+    stats[q.cat].ok++;
+    score++;
+  } else {
+    stats[q.cat].bad++;
+  }
+
+  document.getElementById("answer").innerHTML =
+    "📌 პასუხი: " + q.ans;
+}
+
+/* ================= NEXT ================= */
+function next(){
+  index++;
+
+  if (index >= exam.length) {
+    finish();
+    return;
+  }
+
+  show();
+}
+
+/* ================= FINISH ================= */
+function finish(){
+  document.getElementById("card").style.display = "none";
+
+  let weak = Object.entries(stats)
+    .sort((a,b) => b[1].bad - a[1].bad)
+    .slice(0,3)
+    .map(x => x[0]);
+
+  document.getElementById("result").innerHTML =
+    "🎯 ქულა: " + score + "/20<br>" +
+    "⚠️ სუსტი თემები: " + (weak.length ? weak.join(", ") : "none");
+}
+
+/* ================= PROGRESS ================= */
+function updateBar(){
+  let p = (index / exam.length) * 100;
+  document.getElementById("fill").style.width = p + "%";
+}
+
+</script>
+
+</body>
+</html>
