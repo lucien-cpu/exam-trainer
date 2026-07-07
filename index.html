@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>National Exam Simulator</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg, #0b0c10, #0f1220);
+  color: #e6e6e6;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* HEADER & LAYOUT */
+header {
+  text-align: center;
+  padding: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: clamp(14px, 2vw, 18px);
+}
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: clamp(12px, 3vw, 20px);
+}
+.card {
+  background: rgba(21,24,35,0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: clamp(14px, 3vw, 22px);
+  margin-top: 15px;
+}
+.category { color: #ffcc00; font-size: 12px; font-weight: bold; }
+.progress { color: #888; font-size: 12px; float: right; }
+.question { font-size: clamp(16px, 3vw, 20px); margin: 10px 0 15px; clear: both; }
+
+/* OPTIONS */
+.option {
+  background: #1c1f2b;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: clamp(14px, 2.5vw, 16px);
+  border: 2px solid transparent;
+}
+.option:hover { transform: scale(1.02); background: #252938; }
+.selected { border-color: #ffcc00; background: rgba(255, 204, 0, 0.1); }
+.correct { background: rgba(46, 204, 113, 0.25); border-color: #2ecc71; }
+.wrong { background: rgba(231, 76, 60, 0.25); border-color: #e74c3c; }
+
+/* CONTROLS */
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  padding: 12px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+  gap: 10px;
+}
+button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  transition: transform 0.1s;
+}
+button:active:not(:disabled) { transform: scale(0.95); }
+.start { background: #ffcc00; color: #111; display: block; margin: 0 auto; }
+.next { background: #2ecc71; color: #111; }
+.next:disabled { opacity: 0.4; cursor: not-allowed; }
+.timer { color: #ffcc00; font-weight: 700; font-size: 14px; }
+.result { margin-top: 20px; font-size: clamp(14px, 2.5vw, 16px); text-align: center; }
+.result p { text-align: left; background: rgba(255,255,255,0.04); padding: 8px 12px; border-radius: 10px; margin: 6px 0; }
+
+/* =========================================
+   ULTRA-CUTE MODERN OWL (SOFT VINYL TOY STYLE)
+   ========================================= */
+.owl-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40px auto 10px;
+  position: relative;
+  width: 180px;
+  height: 200px;
+  justify-content: flex-end;
+}
+
+/* Base animation wrapper */
+.owl {
+  position: relative;
+  width: 150px;
+  height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: bottom center;
+  z-index: 2;
+}
+
+.owl.idle { animation: softBreath 3s ease-in-out infinite; }
+
+/* --- HEAD (Soft Clay Sphere) --- */
+.owl-head {
+  width: 140px;
+  height: 110px;
+  background: #a35d36;
+  border-radius: 70px 70px 55px 55px;
+  position: relative;
+  box-shadow: 
+    inset 0 -10px 15px rgba(0,0,0,0.15),
+    inset 0 6px 10px rgba(255,255,255,0.15),
+    0 8px 15px rgba(0,0,0,0.3);
+  z-index: 4;
+}
+
+/* Cute Curved Tufts */
+.tufts {
+  position: absolute;
+  top: -15px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+.tuft {
+  width: 45px;
+  height: 35px;
+  background: #ff9838;
+  border-radius: 30px 10px 30px 5px;
+  box-shadow: inset 0 -4px 6px rgba(0,0,0,0.1);
+}
+.tuft.left { transform: rotate(-20deg); }
+.tuft.right { transform: rotate(20deg) scaleX(-1); }
+
+/* The White Figure-8 Face */
+.face-mask {
+  position: absolute;
+  top: 18px;
+  left: 5px;
+  width: 130px;
+  height: 85px;
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+.cheek {
+  width: 64px;
+  height: 75px;
+  background: #f4f7fa;
+  border-radius: 50%;
+  box-shadow: 
+    inset 0 -6px 8px rgba(160, 180, 200, 0.4),
+    0 4px 6px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Bright Orange Eye Rings */
+.eye-ring {
+  width: 52px;
+  height: 52px;
+  background: #ff9f43;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: inset 0 -4px 6px rgba(200, 90, 0, 0.4);
+}
+
+/* Deep Black Sockets */
+.eye-socket {
+  width: 38px;
+  height: 38px;
+  background: #1a1a24;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 4px 6px rgba(0,0,0,0.4);
+}
+
+/* HD Glossy Pupils */
+.pupil {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.pupil::before {
+  content: '';
+  position: absolute;
+  top: 6px; left: 8px;
+  width: 12px; height: 12px;
+  background: #ffffff;
+  border-radius: 50%;
+}
+.pupil::after {
+  content: '';
+  position: absolute;
+  bottom: 8px; right: 10px;
+  width: 5px; height: 5px;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+/* Adorable Tiny Beak */
+.beak {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 26px;
+  background: #ffb142;
+  border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  box-shadow: 
+    inset 0 -3px 5px rgba(200, 100, 0, 0.5),
+    0 4px 6px rgba(0,0,0,0.2);
+  z-index: 5;
+  transition: transform 0.2s;
+}
+
+/* Dynamic Eyelids (For Blinking & Expressions) */
+.eyelid-top, .eyelid-bottom {
+  position: absolute;
+  width: 100%; height: 100%;
+  background: #f4f7fa;
+  z-index: 5;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.eyelid-top { top: -110%; border-bottom: 3px solid #d1d8e0; }
+.eyelid-bottom { bottom: -110%; border-top: 3px solid #d1d8e0; }
+
+/* Blushing Cheeks */
+.blush {
+  position: absolute;
+  bottom: 8px;
+  width: 16px; height: 10px;
+  background: #ff7675;
+  border-radius: 50%;
+  opacity: 0;
+  filter: blur(2px);
+  transition: 0.3s;
+  z-index: 6;
+}
+.blush.left { left: 8px; }
+.blush.right { right: 8px; }
+
+/* --- STRIPED SCARF --- */
+.scarf-container {
+  position: absolute;
+  top: 95px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.scarf-neck {
+  width: 144px;
+  height: 28px;
+  background: repeating-linear-gradient(90deg, #6bc5ff 0%, #6bc5ff 25px, #ffffff 25px, #ffffff 50px);
+  border-radius: 14px;
+  box-shadow: 
+    inset 0 -4px 6px rgba(0,0,0,0.1),
+    0 6px 10px rgba(0,0,0,0.3);
+}
+.scarf-tail {
+  width: 32px;
+  height: 40px;
+  background: linear-gradient(180deg, #6bc5ff 0%, #6bc5ff 50%, #ffffff 50%, #ffffff 100%);
+  border-radius: 4px 4px 12px 12px;
+  margin-right: 18px;
+  margin-top: -5px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  z-index: 6;
+  transform-origin: top;
+}
+
+/* --- BODY & WINGS --- */
+.owl-body {
+  width: 110px;
+  height: 70px;
+  background: #a35d36;
+  border-radius: 55px 55px 45px 45px;
+  position: absolute;
+  top: 105px;
+  box-shadow: 
+    inset 0 -10px 15px rgba(0,0,0,0.2),
+    0 10px 15px rgba(0,0,0,0.4);
+  z-index: 3;
+}
+.wing {
+  width: 26px;
+  height: 55px;
+  background: #8b4a28;
+  position: absolute;
+  top: 15px;
+  border-radius: 13px;
+  box-shadow: inset 0 -4px 6px rgba(0,0,0,0.2);
+  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 2;
+}
+.wing.left { left: -10px; transform: rotate(20deg); transform-origin: top right; }
+.wing.right { right: -10px; transform: rotate(-20deg); transform-origin: top left; }
+
+/* SPEECH BUBBLE */
+.owl-bubble {
+  --bubble-color: #ffffff;
+  background: var(--bubble-color);
+  color: #111;
+  padding: 8px 18px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 800;
+  position: absolute;
+  top: -45px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+  text-align: center;
+  border: 3px solid #111;
+  transform: translateY(0) scale(1);
+  transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 10;
+  white-space: nowrap;
+}
+.owl-bubble::after {
+  content: ''; position: absolute; bottom: -8px; left: 50%;
+  transform: translateX(-50%); border-width: 8px 8px 0;
+  border-style: solid; border-color: #111 transparent;
+}
+.owl-bubble::before {
+  content: ''; position: absolute; bottom: -4px; left: 50%;
+  transform: translateX(-50%); border-width: 6px 6px 0;
+  border-style: solid; border-color: var(--bubble-color) transparent; z-index: 2;
+}
+
+/* =========================================
+   EMOTION STATE ANIMATIONS
+   ========================================= */
+
+/* Happy (^ ^) */
+.owl.happy { animation: jumpJoy 0.6s cubic-bezier(0.28, 0.84, 0.42, 1); }
+.owl.happy .eyelid-bottom { bottom: -45%; border-radius: 50% 50% 0 0; }
+.owl.happy .blush { opacity: 0.8; transform: translateY(-4px); }
+.owl.happy .beak { transform: translateX(-50%) translateY(-2px); }
+.owl.happy .scarf-tail { animation: scarfSwing 0.6s infinite alternate; }
+.owl.happy .wing.left { animation: flapLeft 0.15s infinite alternate; }
+.owl.happy .wing.right { animation: flapRight 0.15s infinite alternate; }
+
+/* Sad (T_T) */
+.owl.sad { animation: squishSad 0.8s cubic-bezier(0.28, 0.84, 0.42, 1); }
+.owl.sad .eyelid-top { top: -55%; }
+.owl.sad .eyelid-top.left { transform: rotate(15deg); }
+.owl.sad .eyelid-top.right { transform: rotate(-15deg); }
+.owl.sad .beak { transform: translateX(-50%) translateY(3px); }
+.owl.sad .owl-head { transform: rotate(4deg) translateY(5px); }
+.owl.sad .wing { transform: rotate(0deg) translateY(4px); }
+
+/* Thinking */
+.owl.thinking .eyelid-top.left { top: -60%; transform: rotate(-10deg); }
+.owl.thinking .eyelid-bottom.right { bottom: -60%; transform: rotate(-10deg); }
+.owl.thinking .owl-head { transform: rotate(-3deg); }
+.owl.thinking .beak { transform: translateX(calc(-50% - 2px)); }
+
+/* KEYFRAMES */
+@keyframes softBreath {
+  0%, 100% { transform: scale(1, 1) translateY(0); }
+  50% { transform: scale(1.02, 0.97) translateY(3px); }
+}
+@keyframes jumpJoy {
+  0% { transform: scale(1, 1) translateY(0); }
+  20% { transform: scale(1.1, 0.9) translateY(8px); }
+  50% { transform: scale(0.95, 1.1) translateY(-25px); }
+  80% { transform: scale(1.05, 0.95) translateY(4px); }
+  100% { transform: scale(1, 1) translateY(0); }
+}
+@keyframes squishSad {
+  0%, 100% { transform: scale(1, 1) translateY(0); }
+  20% { transform: scale(1.05, 0.9) translateY(10px); }
+  50% { transform: scale(1.02, 0.95) translateY(8px); }
+  70% { transform: scale(1.04, 0.92) translateY(9px); }
+}
+@keyframes scarfSwing { 0% { transform: rotate(0deg); } 100% { transform: rotate(-25deg); } }
+@keyframes flapLeft { 0% { transform: rotate(20deg); } 100% { transform: rotate(70deg) translateY(-5px); } }
+@keyframes flapRight { 0% { transform: rotate(-20deg); } 100% { transform: rotate(-70deg) translateY(-5px); } }
+
+@media (max-width:600px){
+  .controls { flex-direction:column; align-items:stretch; }
+  button { width:100%; }
+  .owl-bubble { white-space: normal; max-width: 220px; }
+}
+</style>
+</head>
+<body>
+
+<header>🎓 ეროვნული გამოცდების სიმულატორი — ფორმულები</header>
+
+<div class="container">
+  <!-- Ultra-Cute HD Soft Owl Companion -->
+  <div class="owl-container">
+    <div class="owl-bubble" id="owlBubble">გამარჯობა! 👋</div>
+    <div class="owl idle" id="owlPet">
+      <div class="owl-head">
+        <div class="tufts">
+          <div class="tuft left"></div>
+          <div class="tuft right"></div>
+        </div>
+        
+        <div class="face-mask">
+          <div class="cheek left">
+            <div class="eye-ring">
+              <div class="eye-socket">
+                <div class="eyelid-top left"></div>
+                <div class="pupil" id="pupilLeft"></div>
+                <div class="eyelid-bottom left"></div>
+              </div>
+            </div>
+            <div class="blush left"></div>
+          </div>
+          
+          <div class="cheek right">
+            <div class="eye-ring">
+              <div class="eye-socket">
+                <div class="eyelid-top right"></div>
+                <div class="pupil" id="pupilRight"></div>
+                <div class="eyelid-bottom right"></div>
+              </div>
+            </div>
+            <div class="blush right"></div>
+          </div>
+          
+          <div class="beak"></div>
+        </div>
+      </div>
+      
+      <div class="scarf-container">
+        <div class="scarf-neck"></div>
+        <div class="scarf-tail"></div>
+      </div>
+      
+      <div class="owl-body">
+        <div class="wing left"></div>
+        <div class="wing right"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="start" onclick="startExam()">გამოცდის დაწყება</button>
+
+  <div class="card" id="card" style="display:none;">
+    <div class="progress" id="progress"></div>
+    <div class="category" id="cat"></div>
+    <div class="question" id="q"></div>
+    <div id="options"></div>
+    <div class="controls">
+      <div class="timer">⏱ <span id="time">60</span>s</div>
+      <button class="next" id="nextBtn" onclick="next()" disabled>შემდეგი ➜</button>
+    </div>
+  </div>
+
+  <div id="result"></div>
+</div>
+
+<script>
+/* =========================================================
+   NAEC (ეროვნული გამოცდები) FORMULA BANK — MATHEMATICS
+   Each entry: category, prompt, correct answer, 3 wrong answers
+   ========================================================= */
+const data = [
+  { cat:"არითმეტიკული პროგრესია", q:"არითმეტიკული პროგრესიის ზოგადი წევრი",
+    ans:"aₙ=a₁+(n−1)d",
+    wrongs:["aₙ=a₁+nd", "aₙ=a₁·(n−1)d", "aₙ=a₁−(n−1)d"] },
+
+  { cat:"არითმეტიკული პროგრესია", q:"არითმეტიკული პროგრესიის პირველი n წევრის ჯამი",
+    ans:"Sₙ=n(a₁+aₙ)/2",
+    wrongs:["Sₙ=n(a₁+aₙ)", "Sₙ=(a₁+aₙ)/2", "Sₙ=n²(a₁+aₙ)/2"] },
+
+  { cat:"გეომეტრიული პროგრესია", q:"გეომეტრიული პროგრესიის ზოგადი წევრი",
+    ans:"bₙ=b₁·q^(n−1)",
+    wrongs:["bₙ=b₁+q(n−1)", "bₙ=b₁·qⁿ", "bₙ=b₁/q^(n−1)"] },
+
+  { cat:"გეომეტრიული პროგრესია", q:"გეომეტრიული პროგრესიის ჯამი (q≠1)",
+    ans:"Sₙ=b₁(qⁿ−1)/(q−1)",
+    wrongs:["Sₙ=b₁(qⁿ+1)/(q−1)", "Sₙ=b₁(q−1)/(qⁿ−1)", "Sₙ=b₁qⁿ/(q−1)"] },
+
+  { cat:"კვადრატული განტოლება", q:"კვადრატული განტოლების ფესვების ფორმულა",
+    ans:"x=(−b±√(b²−4ac))/(2a)",
+    wrongs:["x=(−b±√(b²+4ac))/(2a)", "x=(b±√(b²−4ac))/(2a)", "x=(−b±√(b²−4ac))/a"] },
+
+  { cat:"კვადრატული განტოლება", q:"დისკრიმინანტის ფორმულა",
+    ans:"D=b²−4ac",
+    wrongs:["D=b²+4ac", "D=4ac−b²", "D=b²−4a"] },
+
+  { cat:"კვადრატული განტოლება", q:"ვიეტას ფორმულა (ფესვთა ჯამი)",
+    ans:"x₁+x₂=−b/a",
+    wrongs:["x₁+x₂=b/a", "x₁+x₂=−c/a", "x₁+x₂=−b/c"] },
+
+  { cat:"გეომეტრია", q:"პითაგორას თეორემა",
+    ans:"a²+b²=c²",
+    wrongs:["a²−b²=c²", "a²+b²=2c²", "a+b=c²"] },
+
+  { cat:"ტრიგონომეტრია", q:"ძირითადი ტრიგონომეტრიული იგივეობა",
+    ans:"sin²x+cos²x=1",
+    wrongs:["sin²x−cos²x=1", "sinx+cosx=1", "sin²x+cos²x=0"] },
+
+  { cat:"ტრიგონომეტრია", q:"კოსინუსების თეორემა",
+    ans:"c²=a²+b²−2ab·cosC",
+    wrongs:["c²=a²+b²+2ab·cosC", "c²=a²−b²−2ab·cosC", "c²=a²+b²−ab·cosC"] },
+
+  { cat:"ტრიგონომეტრია", q:"სინუსების თეორემა",
+    ans:"a/sinA=b/sinB=c/sinC",
+    wrongs:["a·sinA=b·sinB=c·sinC", "a/sinA=b/cosB=c/sinC", "a/sinA=2b/sinB"] },
+
+  { cat:"გეომეტრია", q:"სამკუთხედის ფართობი (ფუძე და სიმაღლე)",
+    ans:"S=(1/2)a·h",
+    wrongs:["S=a·h", "S=(1/2)a²", "S=(1/3)a·h"] },
+
+  { cat:"გეომეტრია", q:"სამკუთხედის ფართობი (ორი გვერდი და მათ შორის კუთხე)",
+    ans:"S=(1/2)ab·sinC",
+    wrongs:["S=ab·sinC", "S=(1/2)ab·cosC", "S=(1/2)a²·sinC"] },
+
+  { cat:"გეომეტრია", q:"წრის ფართობი",
+    ans:"S=πr²",
+    wrongs:["S=2πr", "S=πr", "S=πd²"] },
+
+  { cat:"გეომეტრია", q:"წრეწირის სიგრძე",
+    ans:"C=2πr",
+    wrongs:["C=πr²", "C=πr", "C=2πd"] },
+
+  { cat:"ალბათობის თეორია", q:"კლასიკური ალბათობის ფორმულა",
+    ans:"P(A)=n(A)/n(Ω)",
+    wrongs:["P(A)=n(Ω)/n(A)", "P(A)=n(A)+n(Ω)", "P(A)=n(A)·n(Ω)"] },
+
+  { cat:"დიფერენციალური აღრიცხვა", q:"ხარისხოვანი ფუნქციის წარმოებული",
+    ans:"(xⁿ)'=n·x^(n−1)",
+    wrongs:["(xⁿ)'=xⁿ⁻¹", "(xⁿ)'=n·xⁿ", "(xⁿ)'=(n−1)·xⁿ"] },
+
+  { cat:"ლოგარითმები", q:"ლოგარითმის ნამრავლის თვისება",
+    ans:"logₐ(xy)=logₐx+logₐy",
+    wrongs:["logₐ(xy)=logₐx·logₐy", "logₐ(xy)=logₐx−logₐy", "logₐ(xy)=(logₐx)(logₐy)"] },
+
+  { cat:"ანალიზური გეომეტრია", q:"მანძილი ორ წერტილს შორის სიბრტყეზე",
+    ans:"d=√((x₂−x₁)²+(y₂−y₁)²)",
+    wrongs:["d=(x₂−x₁)²+(y₂−y₁)²", "d=√((x₂+x₁)²+(y₂+y₁)²)", "d=(x₂−x₁)+(y₂−y₁)"] },
+
+  { cat:"ანალიზური გეომეტრია", q:"წრფის დახრილობის კუთხური კოეფიციენტი",
+    ans:"k=(y₂−y₁)/(x₂−x₁)",
+    wrongs:["k=(x₂−x₁)/(y₂−y₁)", "k=(y₂+y₁)/(x₂+x₁)", "k=y₂−y₁·x₂−x₁"] },
+
+  /* ===================== ალგებრული იგივეობები ===================== */
+  { cat:"ალგებრული იგივეობები", q:"სხვაობა კვადრატების ფორმულა",
+    ans:"a²−b²=(a−b)(a+b)",
+    wrongs:["a²−b²=(a−b)²", "a²−b²=(a+b)²", "a²−b²=(a−b)(a²+ab+b²)"] },
+
+  { cat:"ალგებრული იგივეობები", q:"კუბების სხვაობის ფორმულა",
+    ans:"a³−b³=(a−b)(a²+ab+b²)",
+    wrongs:["a³−b³=(a−b)(a²−ab+b²)", "a³−b³=(a+b)(a²−ab+b²)", "a³−b³=(a−b)(a+b)"] },
+
+  { cat:"ალგებრული იგივეობები", q:"კუბების ჯამის ფორმულა",
+    ans:"a³+b³=(a+b)(a²−ab+b²)",
+    wrongs:["a³+b³=(a+b)(a²+ab+b²)", "a³+b³=(a−b)(a²−ab+b²)", "a³+b³=(a+b)³"] },
+
+  { cat:"ალგებრული იგივეობები", q:"ჯამის კვადრატის ფორმულა",
+    ans:"(a+b)²=a²+2ab+b²",
+    wrongs:["(a+b)²=a²+b²", "(a+b)²=a²+ab+b²", "(a+b)²=a²+2ab−b²"] },
+
+  { cat:"ალგებრული იგივეობები", q:"სხვაობის კვადრატის ფორმულა",
+    ans:"(a−b)²=a²−2ab+b²",
+    wrongs:["(a−b)²=a²−b²", "(a−b)²=a²−2ab−b²", "(a−b)²=a²+2ab+b²"] },
+
+  { cat:"ალგებრული იგივეობები", q:"ჯამის კუბის ფორმულა",
+    ans:"(a+b)³=a³+3a²b+3ab²+b³",
+    wrongs:["(a+b)³=a³+b³", "(a+b)³=a³+3ab²+b³", "(a+b)³=a³+3a²b+b³"] },
+
+  { cat:"ალგებრული იგივეობები", q:"სხვაობის კუბის ფორმულა",
+    ans:"(a−b)³=a³−3a²b+3ab²−b³",
+    wrongs:["(a−b)³=a³−3a²b−3ab²−b³", "(a−b)³=a³−b³", "(a−b)³=a³−3ab²+b³"] },
+
+  { cat:"ალგებრული იგივეობები", q:"სამწევრის ჯამის კვადრატის ფორმულა",
+    ans:"(a+b+c)²=a²+b²+c²+2ab+2ac+2bc",
+    wrongs:["(a+b+c)²=a²+b²+c²", "(a+b+c)²=a²+b²+c²+ab+ac+bc", "(a+b+c)²=a²+b²+c²+2abc"] },
+
+  /* ===================== პროპორცია და პროცენტები ===================== */
+  { cat:"პროპორცია", q:"პროპორციის ძირითადი თვისება (a/b=c/d)",
+    ans:"a·d=b·c",
+    wrongs:["a·b=c·d", "a·c=b·d", "a/d=b/c"] },
+
+  { cat:"პროცენტები", q:"რიცხვის a — k პროცენტი",
+    ans:"ak/100",
+    wrongs:["a/(100k)", "100k/a", "ak·100"] },
+
+  { cat:"პროცენტები", q:"რიცხვი, რომლის k%-იც ტოლია b-ის",
+    ans:"b·100/k",
+    wrongs:["b·k/100", "b·k", "b/(100k)"] },
+
+  { cat:"პროცენტები", q:"a რიცხვი b რიცხვის რამდენ პროცენტს შეადგენს",
+    ans:"(a/b)·100%",
+    wrongs:["(b/a)·100%", "a·b·100%", "((a−b)/b)·100%"] },
+
+  /* ===================== ხარისხები ===================== */
+  { cat:"ხარისხები", q:"ხარისხის განმარტება (n∈ℕ)",
+    ans:"aⁿ=a·a·…·a (n-ჯერ)",
+    wrongs:["aⁿ=a·n", "aⁿ=a+a+…+a (n-ჯერ)", "aⁿ=n·a"] },
+
+  { cat:"ხარისხები", q:"ნულოვანი ხარისხი (a≠0)",
+    ans:"a⁰=1",
+    wrongs:["a⁰=0", "a⁰=a", "a⁰=−1"] },
+
+  { cat:"ხარისხები", q:"უარყოფითი ხარისხი",
+    ans:"a⁻ⁿ=1/aⁿ",
+    wrongs:["a⁻ⁿ=−aⁿ", "a⁻ⁿ=1/(na)", "a⁻ⁿ=−1/aⁿ"] },
+
+  { cat:"ხარისხები", q:"წილადი მაჩვენებლის ხარისხი (a>0)",
+    ans:"a^(m/n)=ⁿ√(aᵐ)",
+    wrongs:["a^(m/n)=ᵐ√(aⁿ)", "a^(m/n)=(√a)^(mn)", "a^(m/n)=(a/n)ᵐ"] },
+
+  { cat:"ხარისხები", q:"ნამრავლის ხარისხი",
+    ans:"(ab)ⁿ=aⁿbⁿ",
+    wrongs:["(ab)ⁿ=aⁿ+bⁿ", "(ab)ⁿ=aⁿ·b", "(ab)ⁿ=a·bⁿ"] },
+
+  { cat:"ხარისხები", q:"წილადის ხარისხი",
+    ans:"(a/b)ⁿ=aⁿ/bⁿ",
+    wrongs:["(a/b)ⁿ=a/bⁿ", "(a/b)ⁿ=(a−b)ⁿ", "(a/b)ⁿ=aⁿ·bⁿ"] },
+
+  { cat:"ხარისხები", q:"ხარისხების ნამრავლი ერთნაირი ფუძით",
+    ans:"aᵐ·aⁿ=a^(m+n)",
+    wrongs:["aᵐ·aⁿ=a^(mn)", "aᵐ·aⁿ=a^(m−n)", "aᵐ·aⁿ=aᵐ+aⁿ"] },
+
+  { cat:"ხარისხები", q:"ხარისხების განაყოფი ერთნაირი ფუძით",
+    ans:"aᵐ/aⁿ=a^(m−n)",
+    wrongs:["aᵐ/aⁿ=a^(m+n)", "aᵐ/aⁿ=a^(n−m)", "aᵐ/aⁿ=aᵐ/ⁿ"] },
+
+  { cat:"ხარისხები", q:"ხარისხის ხარისხი",
+    ans:"(aᵐ)ⁿ=a^(mn)",
+    wrongs:["(aᵐ)ⁿ=a^(m+n)", "(aᵐ)ⁿ=aᵐ⁺ⁿ", "(aᵐ)ⁿ=a^(m/n)"] },
+
+  /* ===================== რომბი ===================== */
+  { cat:"რომბი", q:"რომბის დიაგონალები და გვერდი (d₁,d₂ — დიაგონალები, a — გვერდი)",
+    ans:"d₁²+d₂²=4a²",
+    wrongs:["d₁²+d₂²=2a²", "d₁²−d₂²=4a²", "d₁·d₂=4a²"] },
+
+  { cat:"რომბი", q:"რომბის ფართობი ფუძით და სიმაღლით",
+    ans:"S=a·h",
+    wrongs:["S=(1/2)a·h", "S=a²·h", "S=2a·h"] },
+
+  { cat:"რომბი", q:"რომბის ფართობი გვერდით და კუთხით",
+    ans:"S=a²·sinA",
+    wrongs:["S=a²·cosA", "S=(1/2)a²·sinA", "S=a·sinA"] },
+
+  { cat:"რომბი", q:"რომბის ფართობი დიაგონალებით",
+    ans:"S=(1/2)d₁·d₂",
+    wrongs:["S=d₁·d₂", "S=(1/2)(d₁+d₂)", "S=(1/4)d₁·d₂"] },
+
+  /* ===================== კვადრატი ===================== */
+  { cat:"კვადრატი", q:"კვადრატის გვერდი შემოხაზული წრის რადიუსით",
+    ans:"a=R√2",
+    wrongs:["a=R/√2", "a=2R", "a=R√3"] },
+
+  { cat:"კვადრატი", q:"კვადრატში ჩახაზული წრის რადიუსი",
+    ans:"r=a/2",
+    wrongs:["r=a", "r=a/√2", "r=2a"] },
+
+  { cat:"კვადრატი", q:"კვადრატის ფართობი",
+    ans:"S=a²=2R²=4r²",
+    wrongs:["S=a²=R²=r²", "S=a²=4R²=2r²", "S=2a²=R²=4r²"] },
+
+  /* ===================== ტრაპეცია ===================== */
+  { cat:"ტრაპეცია", q:"ტრაპეციის ფართობი (a,b — ფუძეები, h — სიმაღლე)",
+    ans:"S=((a+b)/2)·h",
+    wrongs:["S=(a+b)·h", "S=((a−b)/2)·h", "S=(a·b)/2·h"] },
+
+  { cat:"ტრაპეცია", q:"ტოლფერდა ტრაპეციის (AD=a, BC=b) AK მონაკვეთი",
+    ans:"AK=(a−b)/2",
+    wrongs:["AK=(a+b)/2", "AK=a−b", "AK=2(a−b)"] },
+
+  { cat:"ტრაპეცია", q:"ტოლფერდა ტრაპეციის სიმაღლე, თუ დიაგონალები ურთიერთმართობულია",
+    ans:"h=(a+b)/2, S=h²",
+    wrongs:["h=(a−b)/2, S=h²", "h=(a+b)/2, S=2h²", "h=ab, S=h²"] },
+
+  /* ===================== წესიერი ექვსკუთხედი და n-კუთხედი ===================== */
+  { cat:"n-კუთხედი", q:"წესიერი ექვსკუთხედის გვერდი",
+    ans:"a₆=R",
+    wrongs:["a₆=2R", "a₆=R/2", "a₆=R√3"] },
+
+  { cat:"n-კუთხედი", q:"წესიერი ექვსკუთხედის ფართობი",
+    ans:"S=(3√3/2)a₆²",
+    wrongs:["S=(√3/2)a₆²", "S=3√3·a₆²", "S=(3√3/4)a₆²"] },
+
+  { cat:"n-კუთხედი", q:"წესიერი n-კუთხედის ცენტრალური კუთხე",
+    ans:"360°/n",
+    wrongs:["180°/n", "(n−2)·180°/n", "360°·n"] },
+
+  { cat:"n-კუთხედი", q:"წესიერი n-კუთხედის შიდა კუთხე",
+    ans:"(n−2)·180°/n",
+    wrongs:["360°/n", "(n−2)·180°", "(n+2)·180°/n"] },
+
+  { cat:"n-კუთხედი", q:"წესიერი n-კუთხედის გვერდი შემოხაზული რადიუსით",
+    ans:"aₙ=2R·sin(180°/n)",
+    wrongs:["aₙ=2R·cos(180°/n)", "aₙ=R·sin(180°/n)", "aₙ=2R·sin(360°/n)"] },
+
+  { cat:"n-კუთხედი", q:"წესიერი n-კუთხედის ჩახაზული რადიუსი",
+    ans:"r=R·cos(180°/n)",
+    wrongs:["r=R·sin(180°/n)", "r=R/cos(180°/n)", "r=2R·cos(180°/n)"] },
+
+  { cat:"n-კუთხედი", q:"მრავალკუთხედის შიდა კუთხეების ჯამი",
+    ans:"180°(n−2)",
+    wrongs:["360°(n−2)", "180°n", "90°(n−2)"] },
+
+  { cat:"n-კუთხედი", q:"მრავალკუთხედის გარე კუთხეების ჯამი (თითო წვეროზე ერთი)",
+    ans:"360°",
+    wrongs:["180°", "180°(n−2)", "90°·n"] },
+
+  { cat:"n-კუთხედი", q:"n-კუთხედის დიაგონალების რაოდენობა",
+    ans:"n(n−3)/2",
+    wrongs:["n(n−3)", "n(n−1)/2", "n(n−2)/2"] },
+
+  /* ===================== წრეწირი და კუთხეები ===================== */
+  { cat:"წრეწირი და კუთხეები", q:"გადამკვეთ ქორდებს შორის კუთხე",
+    ans:"∠=½(⌢AD+⌢BC)",
+    wrongs:["∠=½(⌢AD−⌢BC)", "∠=⌢AD+⌢BC", "∠=½(⌢AD·⌢BC)"] },
+
+  { cat:"წრეწირი და კუთხეები", q:"გადამკვეთ მკვეთებს შორის კუთხე",
+    ans:"∠=½(⌢BC−⌢DE)",
+    wrongs:["∠=½(⌢BC+⌢DE)", "∠=⌢BC−⌢DE", "∠=½(⌢DE−⌢BC)"] },
+
+  { cat:"წრეწირი და კუთხეები", q:"ორ მხებს შორის კუთხე",
+    ans:"∠=180°−⌢BDC",
+    wrongs:["∠=⌢BDC−180°", "∠=½·⌢BDC", "∠=360°−⌢BDC"] },
+
+  { cat:"წრეწირი და კუთხეები", q:"წრეწირის სიგრძის შეფარდება დიამეტრთან",
+    ans:"π≈3.14",
+    wrongs:["π≈3.41", "π=3", "π≈2.14"] },
+
+  { cat:"წრეწირი და კუთხეები", q:"წრიული სექტორის ფართობი (α — რადიანებში)",
+    ans:"S=½R²α",
+    wrongs:["S=R²α", "S=½Rα²", "S=½R²α²"] },
+
+  { cat:"წრეწირი და კუთხეები", q:"რკალის სიგრძე (α — რადიანებში)",
+    ans:"l=Rα",
+    wrongs:["l=½Rα", "l=R²α", "l=Rα²"] },
+
+  { cat:"წრეწირი და კუთხეები", q:"წრიული სეგმენტის ფართობი",
+    ans:"S=½R²(α±sinα)",
+    wrongs:["S=½R²(α·sinα)", "S=R²(α±sinα)", "S=½R(α±sinα)"] },
+
+  { cat:"წრეწირი და კუთხეები", q:"გადამკვეთი ქორდების თვისება",
+    ans:"AM·MB=CM·MD",
+    wrongs:["AM·MB=CM+MD", "AM+MB=CM·MD", "AM·CM=MB·MD"] },
+
+  { cat:"წრეწირი და კუთხეები", q:"მხების და მკვეთის თვისება (AD — მხები)",
+    ans:"AD²=AB·AC",
+    wrongs:["AD²=AB+AC", "AD=AB·AC", "AD²=AB²·AC²"] },
+
+  { cat:"წრეწირი და კუთხეები", q:"ორი მკვეთის თვისება",
+    ans:"AB·AD=AC·AE",
+    wrongs:["AB+AD=AC+AE", "AB·AC=AD·AE", "AB·AD=AE²"] },
+
+  /* ===================== სტერეომეტრია ===================== */
+  { cat:"სტერეომეტრია", q:"პირამიდის მოცულობა (Q — ფუძის ფართობი, h — სიმაღლე)",
+    ans:"V=(1/3)Q·h",
+    wrongs:["V=Q·h", "V=(1/2)Q·h", "V=(1/3)Q²·h"] },
+
+  { cat:"სტერეომეტრია", q:"ცილინდრის გვერდითი ზედაპირის ფართობი",
+    ans:"S=2πRH",
+    wrongs:["S=πRH", "S=2πR²H", "S=πR²H"] },
+
+  { cat:"სტერეომეტრია", q:"ცილინდრის სრული ზედაპირის ფართობი",
+    ans:"T=2πR(H+R)",
+    wrongs:["T=2πRH", "T=πR(H+R)", "T=2πR(H+2R)"] },
+
+  { cat:"სტერეომეტრია", q:"ცილინდრის მოცულობა",
+    ans:"V=πR²H",
+    wrongs:["V=2πR²H", "V=πRH²", "V=(1/3)πR²H"] },
+
+  { cat:"სტერეომეტრია", q:"კონუსის გვერდითი ზედაპირის ფართობი (l — ფერდი)",
+    ans:"S=πRl",
+    wrongs:["S=πR²l", "S=2πRl", "S=πRl²"] },
+
+  { cat:"სტერეომეტრია", q:"კონუსის სრული ზედაპირის ფართობი",
+    ans:"T=πR(l+R)",
+    wrongs:["T=πRl", "T=2πR(l+R)", "T=πR(l+2R)"] },
+
+  { cat:"სტერეომეტრია", q:"კონუსის მოცულობა",
+    ans:"V=(1/3)πR²H",
+    wrongs:["V=πR²H", "V=(1/3)πRH²", "V=(1/3)πR²l"] },
+
+  /* ===================== სფერო და ბირთვი ===================== */
+  { cat:"სფერო და ბირთვი", q:"სფეროს ზედაპირის ფართობი",
+    ans:"S=4πR²",
+    wrongs:["S=πR²", "S=2πR²", "S=(4/3)πR²"] },
+
+  { cat:"სფერო და ბირთვი", q:"ბირთვის მოცულობა",
+    ans:"V=(4/3)πR³",
+    wrongs:["V=4πR³", "V=(4/3)πR²", "V=(3/4)πR³"] },
+
+  /* ===================== კოორდინატთა გეომეტრია ===================== */
+  { cat:"კოორდინატთა გეომეტრია", q:"მანძილი ორ წერტილს შორის სივრცეში (M₁,M₂)",
+    ans:"|M₁M₂|=√((x₂−x₁)²+(y₂−y₁)²+(z₂−z₁)²)",
+    wrongs:["|M₁M₂|=(x₂−x₁)²+(y₂−y₁)²+(z₂−z₁)²", "|M₁M₂|=√((x₂+x₁)²+(y₂+y₁)²+(z₂+z₁)²)", "|M₁M₂|=√((x₂−x₁)+(y₂−y₁)+(z₂−z₁))"] },
+
+  /* ===================== გეომეტრიული გარდაქმნები ===================== */
+  { cat:"გეომეტრიული გარდაქმნები", q:"პარალელური გადატანა ვექტორით n̄(a;b)",
+    ans:"x′=x+a, y′=y+b",
+    wrongs:["x′=x−a, y′=y−b", "x′=ax, y′=by", "x′=x+b, y′=y+a"] },
+
+  { cat:"გეომეტრიული გარდაქმნები", q:"სიმეტრია აბსცისთა ღერძის მიმართ",
+    ans:"x′=x, y′=−y",
+    wrongs:["x′=−x, y′=y", "x′=−x, y′=−y", "x′=y, y′=x"] },
+
+  { cat:"გეომეტრიული გარდაქმნები", q:"სიმეტრია ორდინატთა ღერძის მიმართ",
+    ans:"x′=−x, y′=y",
+    wrongs:["x′=x, y′=−y", "x′=−x, y′=−y", "x′=y, y′=−x"] },
+
+  { cat:"გეომეტრიული გარდაქმნები", q:"სიმეტრია სათავის მიმართ",
+    ans:"x′=−x, y′=−y",
+    wrongs:["x′=x, y′=−y", "x′=−x, y′=y", "x′=y, y′=x"] },
+
+  { cat:"გეომეტრიული გარდაქმნები", q:"ჰომოთეტია სათავის მიმართ, კოეფიციენტი k",
+    ans:"x′=kx, y′=ky",
+    wrongs:["x′=x/k, y′=y/k", "x′=kx, y′=y", "x′=k+x, y′=k+y"] },
+
+  { cat:"გეომეტრიული გარდაქმნები", q:"ბრუნვა სათავის გარშემო 90°-ით",
+    ans:"x′=−y, y′=x",
+    wrongs:["x′=y, y′=−x", "x′=−x, y′=−y", "x′=y, y′=x"] },
+
+  /* ===================== ჰომოთეტია (განმარტება) ===================== */
+  { cat:"ჰომოთეტია", q:"ჰომოთეტია O ცენტრით, k>0 კოეფიციენტით — წერტილის მდებარეობა",
+    ans:"X′ დევს OX სხივზე და OX′=k·OX",
+    wrongs:["X′ დევს OX-ის საწინააღმდეგო სხივზე და OX′=k·OX", "O დევს X-სა და X′-ს შორის", "OX′=k²·OX"] },
+
+  { cat:"ჰომოთეტია", q:"ჰომოთეტია O ცენტრით, k<0 კოეფიციენტით — წერტილის მდებარეობა",
+    ans:"O დევს X-სა და X′-ს შორის და OX′=|k|·OX",
+    wrongs:["X′ დევს OX სხივზე და OX′=|k|·OX", "O დევს X-სა და X′-ს გარეთ", "OX′=k·OX"] }
+];
+
+let exam=[], index=0, score=0, selected=null, locked=false, timer=null, time=60, wrong=[], emotionTimeout=null;
+
+const owlPet = document.getElementById("owlPet");
+const owlBubble = document.getElementById("owlBubble");
+const pupilLeft = document.getElementById("pupilLeft");
+const pupilRight = document.getElementById("pupilRight");
+
+// Fisher-Yates shuffle — unbiased, unlike sort(() => Math.random()-0.5)
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// Bubbly HD Eye Tracking
+document.addEventListener("mousemove", (e) => {
+  if(owlPet.classList.contains('happy') || owlPet.classList.contains('sad')) return;
+  
+  [pupilLeft, pupilRight].forEach(pupil => {
+    const rect = pupil.parentElement.getBoundingClientRect();
+    const eyeX = rect.left + rect.width / 2;
+    const eyeY = rect.top + rect.height / 2;
+    
+    const angle = Math.atan2(e.clientY - eyeY, e.clientX - eyeX);
+    const maxDist = 5; // Keeps pupils safely inside sockets
+    
+    const x = Math.cos(angle) * maxDist;
+    const y = Math.sin(angle) * maxDist;
+    
+    pupil.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+  });
+});
+
+function setEmotion(state, msg, bgColor, textColor = "#111") {
+  clearTimeout(emotionTimeout);
+  
+  owlBubble.innerText = msg;
+  owlBubble.style.setProperty('--bubble-color', bgColor);
+  owlBubble.style.color = textColor;
+
+  // Pop bubble
+  owlBubble.style.transform = "translateY(-5px) scale(1.1)";
+  setTimeout(() => owlBubble.style.transform = "translateY(0) scale(1)", 150);
+
+  // Set animation state
+  owlPet.className = `owl ${state}`; 
+  
+  if(state !== 'idle') {
+    emotionTimeout = setTimeout(() => { owlPet.className = "owl idle"; }, 1500);
+  }
+}
+
+const EXAM_SIZE = 30; // questions per exam, randomly sampled (no repeats) from the full bank
+
+function startExam(){
+  exam = shuffle(data).slice(0, Math.min(EXAM_SIZE, data.length));
+  index=0; score=0; wrong=[]; selected=null; locked=false;
+  document.getElementById("result").innerHTML=""; 
+  setEmotion('thinking', "წარმატებები! 🧠", "#ffcc00");
+  show();
+}
+
+function startTimer(){
+  clearInterval(timer); time=60;
+  document.getElementById("time").innerText=time;
+  timer=setInterval(()=>{
+    time--; document.getElementById("time").innerText=time;
+    if(time<=0) lockAnswer();
+  }, 1000);
+}
+
+function show(){
+  locked=false; selected=null;
+  document.getElementById("nextBtn").disabled=true;
+  let q=exam[index];
+  document.getElementById("card").style.display="block";
+  document.getElementById("progress").innerText = `${index+1} / ${exam.length}`;
+  document.getElementById("cat").innerText=q.cat;
+  document.getElementById("q").innerText=q.q;
+  
+  let box=document.getElementById("options"); box.innerHTML="";
+  // Correct answer + its own 3 curated distractors — guaranteed unique, no accidental duplicates
+  let options = shuffle([q.ans, ...q.wrongs]);
+
+  options.forEach(opt=>{
+    let div=document.createElement("div");
+    div.className="option"; div.innerText=opt;
+    div.onclick=()=>{
+      if(locked) return;
+      document.querySelectorAll(".option").forEach(o=>o.classList.remove("selected"));
+      div.classList.add("selected"); selected=opt;
+      document.getElementById("nextBtn").disabled=false;
+    };
+    box.appendChild(div);
+  });
+  startTimer();
+}
+
+function lockAnswer(){
+  if(locked) return; locked=true; clearInterval(timer);
+  let q=exam[index];
+  document.querySelectorAll(".option").forEach(o=>{
+    o.onclick=null;
+    if(o.innerText===q.ans) o.classList.add("correct");
+    else if(o.innerText===selected) o.classList.add("wrong");
+  });
+  
+  if(selected!==q.ans) {
+    wrong.push(q);
+    setEmotion('sad', "კიდევ სცადე... 🦉", "#e74c3c", "#fff");
+  } else {
+    score++;
+    setEmotion('happy', "ყოჩაღ! 🌟", "#2ecc71");
+  }
+  document.getElementById("nextBtn").disabled=false;
+}
+
+function next(){
+  if(!locked) lockAnswer();
+  index++;
+  if(index>=exam.length) finish();
+  else show();
+}
+
+function finish(){
+  document.getElementById("card").style.display="none";
+  let r=`<h2>🎯 შედეგი: ${score}/${exam.length}</h2>`;
+  if(wrong.length){
+    r+=`<h3>❌ შეცდომები:</h3>`;
+    wrong.forEach((q,i)=>{ r+=`<p>${i+1}. ${q.q} → <strong>${q.ans}</strong></p>`; });
+  }
+  r += `<button class="start" onclick="startExam()">თავიდან დაწყება ↻</button>`;
+  document.getElementById("result").innerHTML=r;
+  
+  if (score >= exam.length * 0.8) { setEmotion('happy', "გენიოსი ხარ! 🎉", "#2ecc71"); clearTimeout(emotionTimeout); } 
+  else if (score >= exam.length * 0.5) { setEmotion('idle', "არაუშავს, კარგია! 👍", "#ffcc00"); } 
+  else { setEmotion('sad', "მეტი მეცადინეობა! 📚", "#e74c3c", "#fff"); clearTimeout(emotionTimeout); }
+}
+</script>
+</body>
+</html>
